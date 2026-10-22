@@ -1,0 +1,16 @@
+## Interface: 120105, 120107, 16001, 11509, 50504, 20506
+## Interface-Mainline: 120105, 120107
+## Interface-Camelot: 16001
+## Interface-Vanilla: 11509
+## Interface-Mists: 50504
+## Interface-TBC: 20506
+## Title: TargetCharms
+## Notes: Customizable raid target icons, ready check button, and world markers. Use /tc setup.
+## Author: Gander, sAks/eusi
+## Version: 1.7.2
+## SavedVariables: TargetCharms_OptionsGlobal
+## SavedVariablesPerCharacter: TargetCharms_Options
+
+Locales.lua
+TargetCharms.xml
+TargetCharmsSetup.xml
