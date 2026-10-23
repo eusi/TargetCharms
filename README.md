@@ -6,6 +6,11 @@ Mark targets, place world markers, and start ready checks without digging throug
 
 **Clients:** Retail, WoW Forever, Classic Era, Mists Classic, TBC Classic
 
+## Installation
+
+- Via **[CurseForge](https://www.curseforge.com/wow/addons/targetcharms)** (see also Gallery for more previews).
+- **Manual:** Extract `TargetCharms` into `Interface/AddOns/`.
+
 ## Features & controls
 
 - **Settings:** `/tc` or Ctrl + right-click a toolbar. Aliases: `/tc setup`, `/targetcharms`.
@@ -33,13 +38,8 @@ Configure outside combat. World markers require client support and group permiss
 - **Copy:** Import the main profile's settings and positions after confirmation.
 - **Reset all settings:** Restore defaults after confirmation. Available here instead of `/tc reset`.
 
-## Installation
-
-- **[CurseForge](https://www.curseforge.com/wow/addons/targetcharms):** Install via the app.
-- **Manual:** Extract `TargetCharms` into `Interface/AddOns/`.
-
 ## Credits
 
-- **[Gander](https://www.curseforge.com/wow/addons/target-charms):** Original addon
+- **Gander:** Original addon
 - **blazer404:** Fixes
 - **sAks/eusi:** Updates
