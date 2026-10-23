@@ -29,7 +29,7 @@ if G_LOCALE == "ruRU" then
     TARGETCHARMS_PANEL_RESET = "Сбросить аддон";
     TARGETCHARMS_READYCHECK_TEXT = "Готовы?";
     TARGETCHARMS_MSG_TAG = "TargetCharms: ";
-    TARGETCHARMS_CMD_HELP = "/TargetCharms [Reset|Setup]";
+    TARGETCHARMS_CMD_HELP = "/tc [setup]";
     TARGETCHARMS_SLASH1 = "/targetcharms";
     TARGETCHARMS_SLASH2 = "/tc";
     TARGETCHARMS_LOADED = "Загружен";
@@ -64,7 +64,7 @@ if G_LOCALE == "ruRU" then
     TARGETCHARMS_CLEARFLARE = "X";
 
     --Lower case on CMDs
-    TargetCharms_CMDS = { "reset", "setup" };
+    TargetCharms_CMDS = { "setup" };
 
     TargetCharms_LayoutDefaults = {
         { "Стандартный", ">1>5v6<2v3>7v8<4v_>0" },
@@ -112,7 +112,7 @@ else
 
     TARGETCHARMS_READYCHECK_TEXT = "Ready?";
     TARGETCHARMS_MSG_TAG = "TargetCharms: ";
-    TARGETCHARMS_CMD_HELP = "/TargetCharms [Reset|Setup]";
+    TARGETCHARMS_CMD_HELP = "/tc [setup]";
     TARGETCHARMS_SLASH1 = "/targetcharms";
     TARGETCHARMS_SLASH2 = "/tc";
     TARGETCHARMS_LOADED = "Loaded";
@@ -146,7 +146,7 @@ else
     TARGETCHARMS_CLEARFLARE = "X";
 
     --Lower case on CMDs
-    TargetCharms_CMDS = { "reset", "setup" };
+    TargetCharms_CMDS = { "setup" };
 
     TargetCharms_LayoutDefaults = {
         { "Standard", ">1>5v6<2v3>7v8<4v_>0" },

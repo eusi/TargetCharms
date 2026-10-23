@@ -1,5 +1,5 @@
 local GetMetadata = C_AddOns and C_AddOns.GetAddOnMetadata or GetAddOnMetadata;
-TARGETCHARMS_VERSION = GetMetadata and GetMetadata("TargetCharms", "Version") or "1.7.2";
+TARGETCHARMS_VERSION = GetMetadata and GetMetadata("TargetCharms", "Version") or "1.8.1";
 TARGETCHARMS_DB_VERSION = "1.6.4";
 
 local pendingSetup = false;
@@ -110,14 +110,10 @@ end
 function TargetCharms_Command(msg)
     msg = string.lower(msg or "")
     local cmd = string.match(msg, "^(%S+)")
-    if cmd == TargetCharms_CMDS[1] then
-        TargetCharms_Reset();
-        TargetCharms_msg(TARGETCHARMS_OPTIONS_RESET);
-    elseif cmd == TargetCharms_CMDS[2] then
-        ShowSetup();
-    else
+    if cmd and cmd ~= "setup" then
         TargetCharms_msg(TARGETCHARMS_CMD_HELP);
     end
+    ShowSetup();
     CheckReadyButtonViewState();
     CheckFrameViewState();
     CheckFlareFrameViewState();
@@ -178,10 +174,12 @@ function CheckFrameViewState()
     local charmBar = _G[frameNames[2]];
     local options = TargetCharms_Options[frameNames[1]];
     local visibility = "show";
-    if not IsInSetup() then
+    if not options.enabled then
+        visibility = "hide";
+    elseif not IsInSetup() then
         local raidDenied = options.partyOnly and UnitInRaid("player") and
             not (UnitIsGroupAssistant("player") or UnitIsGroupLeader("player"));
-        if not options.enabled or raidDenied then
+        if raidDenied then
             visibility = "hide";
         elseif options.partyOnly and options.showontarget then
             visibility = "[group,@target,exists] show; hide";
@@ -201,12 +199,12 @@ function CheckFlareFrameViewState()
     local bar = _G[frameNames[6]];
     local options = TargetCharms_Options[frameNames[5]];
     local visibility = "show";
-    if not HasWorldMarkers() then
+    if not HasWorldMarkers() or not options.enabled then
         visibility = "hide";
     elseif not IsInSetup() then
         local raidDenied = options.partyOnly and UnitInRaid("player") and
             not (UnitIsGroupAssistant("player") or UnitIsGroupLeader("player"));
-        if not options.enabled or raidDenied then
+        if raidDenied then
             visibility = "hide";
         elseif options.partyOnly then
             visibility = "[group] show; hide";
@@ -222,8 +220,8 @@ function CheckReadyButtonViewState()
     charmBar:Show();
     charmBar = _G[frameNames[3]];
     local options = TargetCharms_Options[frameNames[3]];
-    if IsInSetup() or (options.enabled and (not options.partyOnly or
-        (GetNumGroupMembers() > 0 and (UnitIsGroupAssistant("player") or UnitIsGroupLeader("player"))))) then
+    if options.enabled and (IsInSetup() or not options.partyOnly or
+        (GetNumGroupMembers() > 0 and (UnitIsGroupAssistant("player") or UnitIsGroupLeader("player")))) then
         charmBar:Show();
     else
         charmBar:Hide();
@@ -266,6 +264,20 @@ function TargetCharms_OnEvent(self, event)
         SetupTargetCharms();
 
         local panel = CreateFrame("Frame", "TargetCharmsPanel", UIParent, "TargetCharmsPanelTemplate");
+        local description = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
+        description:SetPoint("TOPLEFT", 20, -24);
+        description:SetWidth(420);
+        description:SetJustifyH("LEFT");
+        description:SetText(TargetCharmsSettingsText.intro);
+        PanelShowButton:SetText(TargetCharmsSettingsText.targets .. " / " .. TargetCharmsSettingsText.world);
+        PanelShowButton:SetWidth(320);
+        PanelResetButton:SetText(TargetCharmsSettingsText.profiles);
+        PanelResetButton:SetWidth(320);
+        PanelResetButton:SetScript("OnClick", function()
+            ShowSetup();
+            local settings = _G[frameNames[7]];
+            if settings and settings:IsShown() then settings:Select(4); end
+        end);
 
         panel.name = "TargetCharms";
         panel.okay = function(self)
@@ -289,6 +301,7 @@ function TargetCharms_OnEvent(self, event)
         TargetCharms_msg(TARGETCHARMS_VERSION .. " - " .. TARGETCHARMS_LOADED);
     end
     if not TargetCharms_Options then return; end
+    if event == "PLAYER_REGEN_ENABLED" then TargetCharms_StopAllMoves(); end
     if event == "PLAYER_REGEN_ENABLED" and pendingSetup then
         pendingSetup = false;
         SetupTargetCharms();
@@ -310,6 +323,7 @@ function SetupTargetCharms()
     SetupButtons(frameNames[1], frameNames[1]);
     SetupButtons(frameNames[5], frameNames[5]);
     SetUpReadyButton();
+    TargetCharms_UpdateMoveHandles();
 end
 
 function TargetCharms_Reset()
@@ -522,11 +536,8 @@ function FormatButton(frame, buttonNum, posChar, typeNum, xSpacing, ySpacing)
             button:SetHeight(16);
             button:SetWidth(16);
             SetTexture(button, _G[button:GetName() .. "CharmTex"], 5, 0, 1, 0, 1, 0, 0, 16, 16);
-            if TargetCharms_Options["FlareCharms"]["draggable"] then
-                button:Show();
-            else
-                button:Hide();
-            end
+            -- Retain the old 16px layout slot without displaying a second grip.
+            button:Hide();
         elseif typeNum == TARGETCHARMS_BLUEFLARE then
             button = MakeButton(frame, buttonNum, true);
             MakeCharm(frame, button, buttonNum, 1, 2, 0.15, 0.85, 0.15, 0.85, 0, 0, 32, 32);
@@ -758,22 +769,10 @@ function ShowSetup()
     --InterfaceOptionsFrame_OpenToCategory("TargetCharms");
     local setupFrame = _G[frameNames[7]];
     if setupFrame == nil then
-        setupFrame = CreateFrame("Frame", frameNames[7], UIParent, "TargetCharmsSetupTemplate");
-        for i, v in ipairs(TargetCharms_LayoutDefaults) do
-            local button = CreateFrame("Button", "ButtonPresetOptions" .. i, setupFrame, "PresetOptionsTemplate");
-            button:SetID(i);
-            _G[button:GetName() .. "Text"]:SetText(i);
-            button:SetPoint("TOP", setupFrame, "TOP", (setupFrame:GetLeft() - button:GetLeft() + 22 * i), button:GetTop() - setupFrame:GetTop());
-
-        end
-        for i, v in ipairs(Flare_LayoutDefaults) do
-            local button = CreateFrame("Button", "ButtonFlarePresetOptions" .. i, setupFrame, "FlarePresetOptionsTemplate");
-            button:SetID(i);
-            _G[button:GetName() .. "Text"]:SetText(i);
-            button:SetPoint("TOP", setupFrame, "TOP", (setupFrame:GetLeft() - button:GetLeft() + 22 * i), button:GetTop() - setupFrame:GetTop());
-        end
+        setupFrame = TargetCharms_CreateSettings();
     end
     setupFrame:Show();
+    setupFrame:Refresh();
     CheckFrameViewState();
     CheckReadyButtonViewState();
     CheckFlareFrameViewState();
@@ -813,19 +812,17 @@ function UpdateGlobal()
     end
 end 
 
--- Right-drag target/ready frames; the world-marker bar uses its drag handle.
+-- All toolbars move exclusively through their dedicated four-arrow grip.
 function TargetCharms_StartDrag(self, button)
     if InCombatLockdown() or not TargetCharms_Options then return; end
     if button == "RightButton" and IsControlKeyDown() then
         ShowSetup();
         return;
     end
-    local isReady = self:GetName() == "ReadyCharm";
-    local barName = isReady and "ReadyCharm" or self:GetParent():GetName();
-    if barName == "FlareCharms" and not self.isDragHandle then return; end
-    local options = TargetCharms_Options[barName];
-    if options and options.draggable and (button == "RightButton" or self.isDragHandle) then
-        local root = isReady and self:GetParent() or self:GetParent():GetParent();
+    if not self.isMoveHandle or button ~= "LeftButton" then return; end
+    local options = TargetCharms_Options[self.barName];
+    if options and options.enabled and options.draggable then
+        local root = self.moveRoot;
         root:StartMoving();
         self.draggingRoot = root;
     end
